@@ -1,0 +1,3 @@
+[submodule "mercantil_automation"]
+	path = mercantil_automation
+	url = https://github.com/leivermoreno/mercantil_automation
