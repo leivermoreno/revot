@@ -2,3 +2,4 @@ __pycache__/
 .vscode/
 .pylintrc
 secret.yaml
+data.yaml
