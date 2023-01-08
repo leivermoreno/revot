@@ -54,6 +54,7 @@ async def check_passcode_handler(update: Update, context: ContextTypes.DEFAULT_T
 
 @command_handler("balance")
 async def balance_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Getting balance, please wait.")
     bank = Bank()
     bank.start_session()
     balance = bank.balance
