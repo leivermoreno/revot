@@ -4,15 +4,14 @@ import os
 from os import path
 
 import yaml
+from mercantil_automation.bank import Bank
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
-    ContextTypes,
     ApplicationHandlerStop,
+    ContextTypes,
     filters,
 )
-
-from mercantil_automation.bank import Bank
 from utils import command_handler, message_handler
 
 environment = os.environ.get("PYTHON_ENV")
@@ -36,13 +35,14 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Hello, I'm Revot. How can I help you?")
 
 
-# this command handler verify the passcode the user needs to provide for some commands in order to get access
+# verify passcode needed to access other commands
 @command_handler("balance")
 async def check_passcode_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         passcode = context.args[0]
-        assert PASSCODE == passcode
-    except (IndexError, AssertionError):
+        if PASSCODE != passcode:
+            raise ValueError("Invalid passcode.")
+    except (IndexError, ValueError):
         passcode = context.args[0] if len(context.args) else None
         logger.info(f"Failed passcode verification. Passcode: {passcode}.")
         await update.message.reply_text("Must provide a correct passcode.")
@@ -61,29 +61,31 @@ async def balance_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"Your account balance is BS. {balance}.")
 
 
+# handle unknown commands
 @message_handler(filters.COMMAND)
 async def unknown_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Unknown command, please try again.")
     raise ApplicationHandlerStop
 
 
-# handler to dismiss edited commands
+# catch edited commands to avoid being re-handled
 @message_handler(filters.UpdateType.EDITED_MESSAGE & filters.COMMAND)
 async def edited_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"Caught updated command: {update.edited_message.text}")
     raise ApplicationHandlerStop
 
 
-# handler to log a command's been handled only in development environment
+# logs to console when a command is successfully handled, only in development
 @message_handler(filters.COMMAND)
 async def log_handled_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # get the command only
     command = update.message.text.split(" ")[0]
     logger.info(f'Command "{command}" successfully handled.')
 
 
 async def handle_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.exception(f"An error ocurred processing the update: {update.message.text}")
-    await update.effective_message.reply_text(
+    await update.message.reply_text(
         "An error ocurred processing your command, please try again."
     )
     raise ApplicationHandlerStop
