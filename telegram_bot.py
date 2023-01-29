@@ -1,5 +1,5 @@
 import yaml
-from mercantil_automation.bank import Bank
+from mercantil_automation import Bank
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
